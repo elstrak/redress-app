@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Upload, Camera, Check, Sparkles, ImageIcon, X, Loader2 } from "lucide-react"
 import type { Product } from "@/lib/products"
 import { useTryOn } from "@/lib/tryon-context"
+import { useAuth } from "@/lib/auth-context"
 
 interface AITryOnModalProps {
   isOpen: boolean
@@ -26,20 +27,34 @@ const steps = [
 
 export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
   const [currentStep, setCurrentStep] = useState<Step>("upload")
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [resultImage, setResultImage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { addResult } = useTryOn()
+  const { user } = useAuth()
 
   const handleFileSelect = useCallback((file: File) => {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setUploadedImage(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+    setErrorMessage(null)
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Загрузите файл изображения.")
+      return
     }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setErrorMessage("Фото слишком большое. Максимальный размер - 8 МБ.")
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setUploadedFile(file)
+      setUploadedImage(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
   }, [])
 
   const handleDrop = useCallback(
@@ -61,31 +76,69 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
     setIsDragging(false)
   }, [])
 
-  const startProcessing = () => {
-    setCurrentStep("processing")
+  const startProcessing = async () => {
+    if (!uploadedFile || !uploadedImage) return
 
-    // Simulate AI processing with random duration
-    const processingTime = 3000 + Math.random() * 2000
-    setTimeout(() => {
-      // Use product image as "result" for mock
-      setResultImage(product.images[0])
+    if (!user) {
+      setErrorMessage("Войдите или зарегистрируйтесь, чтобы сохранить AI-примерку в личном кабинете.")
+      return
+    }
+
+    setCurrentStep("processing")
+    setErrorMessage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append("userPhoto", uploadedFile)
+      formData.append("productId", String(product.id))
+
+      const response = await fetch("/api/tryon", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = (await response.json()) as {
+        id?: string
+        resultImage?: string
+        createdAt?: string
+        error?: string
+        details?: unknown
+      }
+
+      if (!response.ok || !data.resultImage || !data.id) {
+        throw new Error(data.error || "Не удалось выполнить AI-примерку.")
+      }
+
+      setResultImage(data.resultImage)
       setCurrentStep("result")
 
-      // Save to context
-      if (uploadedImage) {
-        addResult({
-          product,
-          userPhoto: uploadedImage,
-          resultPhoto: product.images[0],
-        })
-      }
-    }, processingTime)
+      addResult({
+        id: data.id,
+        product,
+        userPhoto: uploadedImage,
+        resultPhoto: data.resultImage,
+        createdAt: data.createdAt,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Не удалось выполнить AI-примерку."
+      setErrorMessage(
+        message === "FASHN_API_KEY is not configured yet."
+          ? "AI-примерка почти готова. Осталось добавить FASHN_API_KEY в .env.local и перезапустить сервер."
+          : message,
+      )
+      setCurrentStep("upload")
+    }
   }
 
   const reset = () => {
     setCurrentStep("upload")
+    setUploadedFile(null)
     setUploadedImage(null)
     setResultImage(null)
+    setErrorMessage(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
   const handleClose = () => {
@@ -98,7 +151,7 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Примерить онлайн</DialogTitle>
@@ -213,7 +266,13 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
                         variant="secondary"
                         size="icon"
                         className="absolute top-2 right-2"
-                        onClick={() => setUploadedImage(null)}
+                        onClick={() => {
+                          setUploadedFile(null)
+                          setUploadedImage(null)
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ""
+                          }
+                        }}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -224,12 +283,24 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
 
               <div className="bg-muted/50 rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Рекомендации:</strong> Используйте фото в полный рост с хорошим
-                  освещением. Желательно в обтягивающей одежде для лучшего результата.
+                  <strong className="text-foreground">Рекомендации:</strong> Используйте фото в полный рост или 3/4
+                  роста с хорошим освещением. В кадре должен быть один человек, желательно в простой одежде.
                 </p>
               </div>
 
-              <Button className="w-full" size="lg" disabled={!uploadedImage} onClick={startProcessing}>
+              {!user && (
+                <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                  Войдите или зарегистрируйтесь в личном кабинете, чтобы запустить примерку и сохранить результат.
+                </div>
+              )}
+
+              {errorMessage && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                  {errorMessage}
+                </div>
+              )}
+
+              <Button className="w-full" size="lg" disabled={!uploadedFile || !user} onClick={startProcessing}>
                 <Sparkles className="h-4 w-4 mr-2" />
                 Примерить
               </Button>
@@ -247,10 +318,10 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
                 </div>
               </div>
               <h3 className="text-xl font-semibold mb-2">Обработка изображения</h3>
-              <p className="text-muted-foreground mb-4">AI подбирает одежду под вашу фигуру...</p>
+              <p className="text-muted-foreground mb-4">Нейросеть переносит выбранную вещь на ваше фото...</p>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Это займёт несколько секунд
+                Обычно это занимает 5-20 секунд
               </div>
             </div>
           )}
@@ -277,13 +348,6 @@ export function AITryOnModal({ isOpen, onClose, product }: AITryOnModalProps) {
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <div className="text-center text-white">
-                        <Sparkles className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-sm">Демо-режим</p>
-                        <p className="text-xs opacity-80">Реальная AI-примерка в разработке</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>

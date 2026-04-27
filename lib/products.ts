@@ -13,6 +13,9 @@ export interface Product {
   description: string
   composition: string
   care: string
+  tryOnImage?: string
+  tryOnCategory?: "auto" | "tops" | "bottoms" | "one-pieces"
+  tryOnGarmentPhotoType?: "auto" | "flat-lay" | "model"
   isNew?: boolean
   isSale?: boolean
 }
@@ -34,6 +37,9 @@ export const products: Product[] = [
       "Элегантное пальто прямого кроя из мягкой шерстяной ткани. Идеально подходит для создания стильного образа в прохладную погоду.",
     composition: "70% шерсть, 20% полиэстер, 10% кашемир",
     care: "Сухая чистка",
+    tryOnImage: "/beige-wool-coat-women-elegant.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
     isSale: true,
   },
   {
@@ -51,6 +57,9 @@ export const products: Product[] = [
       "Изящное платье миди с акцентным поясом на талии. Струящаяся ткань красиво драпируется и подчёркивает силуэт.",
     composition: "100% полиэстер",
     care: "Машинная стирка при 30°C",
+    tryOnImage: "/emerald-green-midi-dress-elegant.jpg",
+    tryOnCategory: "one-pieces",
+    tryOnGarmentPhotoType: "model",
     isNew: true,
   },
   {
@@ -67,6 +76,9 @@ export const products: Product[] = [
     description: "Классический мужской костюм из итальянской шерсти. Приталенный силуэт, две пуговицы, боковые шлицы.",
     composition: "100% шерсть",
     care: "Сухая чистка",
+    tryOnImage: "/dark-blue-business-suit-men.jpg",
+    tryOnCategory: "one-pieces",
+    tryOnGarmentPhotoType: "model",
   },
   {
     id: 4,
@@ -83,6 +95,9 @@ export const products: Product[] = [
     description: "Легендарные джинсы прямого кроя. Плотный деним с эффектом потёртости, классическая посадка на талии.",
     composition: "99% хлопок, 1% эластан",
     care: "Машинная стирка при 40°C",
+    tryOnImage: "/classic-blue-jeans-straight-fit.jpg",
+    tryOnCategory: "bottoms",
+    tryOnGarmentPhotoType: "model",
     isSale: true,
   },
   {
@@ -99,6 +114,9 @@ export const products: Product[] = [
     description: "Нежная блуза с изящным бантом на воротнике. Лёгкая ткань с шелковистой текстурой.",
     composition: "100% полиэстер",
     care: "Ручная стирка",
+    tryOnImage: "/white-silk-blouse-with-bow.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
     isNew: true,
   },
   {
@@ -115,6 +133,9 @@ export const products: Product[] = [
     description: "Стильная кожаная куртка в байкерском стиле. Асимметричная молния, множество карманов.",
     composition: "Натуральная кожа",
     care: "Специальный уход за кожей",
+    tryOnImage: "/black-leather-jacket-women-biker.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
   },
   {
     id: 7,
@@ -130,6 +151,9 @@ export const products: Product[] = [
     description: "Уютный свитер оверсайз крупной вязки. Мягкая шерсть с добавлением кашемира.",
     composition: "70% шерсть, 30% кашемир",
     care: "Ручная стирка",
+    tryOnImage: "/cream-oversized-knit-sweater-cozy.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
   },
   {
     id: 8,
@@ -146,6 +170,9 @@ export const products: Product[] = [
     description: "Лёгкая льняная рубашка для жаркой погоды. Расслабленный крой, воротник кент.",
     composition: "100% лён",
     care: "Машинная стирка при 40°C",
+    tryOnImage: "/light-blue-linen-shirt-men-summer.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
     isSale: true,
   },
   {
@@ -162,6 +189,9 @@ export const products: Product[] = [
     description: "Элегантная юбка-плиссе длины миди. Эластичный пояс для комфортной посадки.",
     composition: "100% полиэстер",
     care: "Машинная стирка при 30°C",
+    tryOnImage: "/black-pleated-midi-skirt-elegant.jpg",
+    tryOnCategory: "bottoms",
+    tryOnGarmentPhotoType: "model",
   },
   {
     id: 10,
@@ -177,6 +207,9 @@ export const products: Product[] = [
     description: "Спортивное худи с фирменным логотипом. Мягкий флис внутри, капюшон на шнурке.",
     composition: "80% хлопок, 20% полиэстер",
     care: "Машинная стирка при 30°C",
+    tryOnImage: "/grey-nike-hoodie-sporty-streetwear.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
     isNew: true,
   },
   {
@@ -193,6 +226,9 @@ export const products: Product[] = [
     description: "Элегантные брюки с широкими штанинами. Высокая посадка, стрелки спереди.",
     composition: "65% полиэстер, 33% вискоза, 2% эластан",
     care: "Машинная стирка при 30°C",
+    tryOnImage: "/black-wide-leg-trousers-women-elegant.jpg",
+    tryOnCategory: "bottoms",
+    tryOnGarmentPhotoType: "model",
   },
   {
     id: 12,
@@ -208,6 +244,9 @@ export const products: Product[] = [
     description: "Культовое поло Lacoste из хлопкового пике. Приталенный крой, эмблема крокодила.",
     composition: "100% хлопок",
     care: "Машинная стирка при 40°C",
+    tryOnImage: "/navy-blue-lacoste-polo-shirt-men-classic.jpg",
+    tryOnCategory: "tops",
+    tryOnGarmentPhotoType: "model",
   },
 ]
 

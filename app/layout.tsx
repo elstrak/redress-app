@@ -1,13 +1,10 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { CartProvider } from "@/lib/cart-context"
 import { TryOnProvider } from "@/lib/tryon-context"
-
-const _inter = Inter({ subsets: ["latin", "cyrillic"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+import { AuthProvider } from "@/lib/auth-context"
 
 export const metadata: Metadata = {
   title: "STYLEHUB - Интернет-магазин одежды",
@@ -23,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="font-sans antialiased">
-        <CartProvider>
-          <TryOnProvider>{children}</TryOnProvider>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <TryOnProvider>{children}</TryOnProvider>
+          </CartProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

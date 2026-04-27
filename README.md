@@ -22,6 +22,26 @@ Continue building your app on:
 
 **[https://v0.app/chat/lVAEVQLuETb](https://v0.app/chat/lVAEVQLuETb)**
 
+## AI try-on setup
+
+The try-on flow is prepared for FASHN Virtual Try-On v1.6.
+
+1. Copy `.env.example` to `.env.local`.
+2. Add your API key:
+
+```bash
+FASHN_API_KEY=your_api_key_here
+MONGODB_URI=your_mongodb_atlas_uri
+MONGODB_DB=stylehub
+SESSION_SECRET=long_random_secret
+```
+
+3. Restart the Next.js dev server.
+
+Without `FASHN_API_KEY`, the UI still works up to photo upload and shows a setup message instead of generating an image.
+
+User accounts and saved AI try-ons use MongoDB Atlas. `SESSION_SECRET` signs the httpOnly session cookie.
+
 ## How It Works
 
 1. Create and modify your project using [v0.app](https://v0.app)

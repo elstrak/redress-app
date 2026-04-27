@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useCart } from "@/lib/cart-context"
-import { useTryOn } from "@/lib/tryon-context"
+import { type TryOnResult, useTryOn } from "@/lib/tryon-context"
+import { useAuth } from "@/lib/auth-context"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   User,
   ShoppingBag,
@@ -25,6 +27,7 @@ import {
   Clock,
   ChevronRight,
   Trash2,
+  Eye,
 } from "lucide-react"
 
 // Mock orders data
@@ -87,8 +90,36 @@ const mockFavorites = [
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile")
+  const [selectedTryOn, setSelectedTryOn] = useState<TryOnResult | null>(null)
+  const [authMode, setAuthMode] = useState<"login" | "register">("login")
+  const [authName, setAuthName] = useState("")
+  const [authEmail, setAuthEmail] = useState("")
+  const [authPassword, setAuthPassword] = useState("")
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false)
   const { items: cartItems } = useCart()
-  const { results: tryOnResults, removeResult } = useTryOn()
+  const { results: tryOnResults, isLoading: isTryOnsLoading, removeResult } = useTryOn()
+  const { user, isLoading: isAuthLoading, login, register, logout } = useAuth()
+
+  const handleAuthSubmit = async () => {
+    setAuthError(null)
+    setIsSubmittingAuth(true)
+
+    try {
+      if (authMode === "login") {
+        await login(authEmail, authPassword)
+      } else {
+        await register(authName, authEmail, authPassword)
+      }
+
+      setAuthPassword("")
+      setAuthName("")
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Не удалось войти в аккаунт.")
+    } finally {
+      setIsSubmittingAuth(false)
+    }
+  }
 
   const menuItems = [
     { id: "profile", label: "Профиль", icon: User },
@@ -108,6 +139,80 @@ export default function ProfilePage() {
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Личный кабинет</h1>
 
+          {!isAuthLoading && !user && (
+            <div className="max-w-md mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{authMode === "login" ? "Вход" : "Регистрация"}</CardTitle>
+                  <CardDescription>
+                    Войдите, чтобы сохранять AI-примерки и видеть историю на любом устройстве
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {authMode === "register" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="authName">Имя</Label>
+                      <Input
+                        id="authName"
+                        value={authName}
+                        onChange={(event) => setAuthName(event.target.value)}
+                        placeholder="Введите имя"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="authEmail">Email</Label>
+                    <Input
+                      id="authEmail"
+                      type="email"
+                      value={authEmail}
+                      onChange={(event) => setAuthEmail(event.target.value)}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="authPassword">Пароль</Label>
+                    <Input
+                      id="authPassword"
+                      type="password"
+                      value={authPassword}
+                      onChange={(event) => setAuthPassword(event.target.value)}
+                      placeholder="Минимум 6 символов"
+                    />
+                  </div>
+
+                  {authError && (
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                      {authError}
+                    </div>
+                  )}
+
+                  <Button className="w-full" onClick={handleAuthSubmit} disabled={isSubmittingAuth}>
+                    {isSubmittingAuth
+                      ? "Пожалуйста, подождите..."
+                      : authMode === "login"
+                        ? "Войти"
+                        : "Создать аккаунт"}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => {
+                      setAuthError(null)
+                      setAuthMode(authMode === "login" ? "register" : "login")
+                    }}
+                  >
+                    {authMode === "login" ? "Создать новый аккаунт" : "Уже есть аккаунт"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {user && (
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <aside className="lg:col-span-1">
@@ -117,8 +222,8 @@ export default function ProfilePage() {
                     <User className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold">Гость</p>
-                    <p className="text-sm text-muted-foreground">guest@example.com</p>
+                    <p className="font-semibold">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
 
@@ -151,7 +256,7 @@ export default function ProfilePage() {
                 </nav>
               </div>
 
-              <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+              <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={logout}>
                 <LogOut className="h-4 w-4 mr-3" />
                 Выйти
               </Button>
@@ -170,15 +275,15 @@ export default function ProfilePage() {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">Имя</Label>
-                        <Input id="firstName" placeholder="Введите имя" />
+                        <Input id="firstName" value={user.name} readOnly />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Фамилия</Label>
-                        <Input id="lastName" placeholder="Введите фамилию" />
+                        <Label htmlFor="lastName">Статус</Label>
+                        <Input id="lastName" value="Покупатель" readOnly />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="email@example.com" />
+                        <Input id="email" type="email" value={user.email} readOnly />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Телефон</Label>
@@ -327,7 +432,13 @@ export default function ProfilePage() {
               {activeTab === "tryons" && (
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">AI-примерки</h2>
-                  {tryOnResults.length === 0 ? (
+                  {isTryOnsLoading ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        Загружаем историю примерок...
+                      </CardContent>
+                    </Card>
+                  ) : tryOnResults.length === 0 ? (
                     <Card>
                       <CardContent className="py-12 text-center">
                         <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -342,27 +453,33 @@ export default function ProfilePage() {
                       {tryOnResults.map((result) => (
                         <Card key={result.id}>
                           <CardContent className="p-4">
-                            <div className="flex gap-3 mb-4">
-                              <div className="w-20 h-24 relative rounded-md overflow-hidden bg-muted">
-                                <Image
-                                  src={result.userPhoto || "/placeholder.svg"}
-                                  alt="Ваше фото"
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="w-20 h-24 relative rounded-md overflow-hidden bg-muted">
-                                <Image
-                                  src={result.resultPhoto || "/placeholder.svg"}
-                                  alt="Результат"
-                                  fill
-                                  className="object-cover"
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                  <Sparkles className="h-6 w-6 text-white" />
+                            <button
+                              type="button"
+                              className="group w-full text-left"
+                              onClick={() => setSelectedTryOn(result)}
+                            >
+                              <div className="flex gap-3 mb-4">
+                                <div className="w-20 h-24 relative rounded-md overflow-hidden bg-muted">
+                                  <Image
+                                    src={result.userPhoto || "/placeholder.svg"}
+                                    alt="Ваше фото"
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                                <div className="w-20 h-24 relative rounded-md overflow-hidden bg-muted">
+                                  <Image
+                                    src={result.resultPhoto || "/placeholder.svg"}
+                                    alt="Результат"
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <Eye className="h-6 w-6 text-white" />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            </button>
                             <div className="flex items-start justify-between">
                               <div>
                                 <p className="text-sm text-muted-foreground">{result.product.brand}</p>
@@ -375,7 +492,12 @@ export default function ProfilePage() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => removeResult(result.id)}
+                                onClick={() => {
+                                  if (selectedTryOn?.id === result.id) {
+                                    setSelectedTryOn(null)
+                                  }
+                                  removeResult(result.id)
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -454,9 +576,67 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+          )}
         </div>
       </main>
       <Footer />
+
+      <Dialog open={Boolean(selectedTryOn)} onOpenChange={(open) => !open && setSelectedTryOn(null)}>
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-5xl">
+          {selectedTryOn && (
+            <>
+              <DialogHeader>
+                <DialogTitle>AI-примерка</DialogTitle>
+              </DialogHeader>
+
+              <div className="space-y-5">
+                <div>
+                  <p className="text-sm text-muted-foreground">{selectedTryOn.product.brand}</p>
+                  <p className="font-medium">{selectedTryOn.product.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedTryOn.createdAt.toLocaleDateString("ru-RU")}
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium mb-2">Оригинал</p>
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted">
+                      <Image
+                        src={selectedTryOn.userPhoto || "/placeholder.svg"}
+                        alt="Ваше исходное фото"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium mb-2">Результат</p>
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted">
+                      <Image
+                        src={selectedTryOn.resultPhoto || "/placeholder.svg"}
+                        alt="Результат AI-примерки"
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button asChild>
+                    <Link href={`/product/${selectedTryOn.product.id}`}>Открыть товар</Link>
+                  </Button>
+                  <Button variant="outline" className="bg-transparent" onClick={() => setSelectedTryOn(null)}>
+                    Закрыть
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
