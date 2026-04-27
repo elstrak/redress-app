@@ -15,7 +15,7 @@ export function HeroBanner() {
       <div className="relative container mx-auto px-4 h-full flex items-center">
         <div className="max-w-xl space-y-6">
           <p className="text-sm uppercase tracking-widest text-muted-foreground">Новая коллекция</p>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-balance">Весна-Лето 2025</h1>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight text-balance">Весна-Лето 2026</h1>
           <p className="text-lg text-muted-foreground max-w-md">
             Откройте для себя актуальные тренды сезона. Примерьте онлайн с помощью AI.
           </p>

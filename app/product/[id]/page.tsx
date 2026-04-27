@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { products } from "@/lib/products"
 import { useCart } from "@/lib/cart-context"
+import { useFavorites } from "@/lib/favorites-context"
 import { AITryOnModal } from "@/components/ai-tryon-modal"
 import { ProductCard } from "@/components/product-card"
 import { Heart, Share2, Truck, RotateCcw, Shield, Sparkles, Check, ChevronLeft, ChevronRight } from "lucide-react"
@@ -22,11 +23,11 @@ export default function ProductPage() {
   const product = products.find((p) => p.id === Number(id))
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
   const [isTryOnOpen, setIsTryOnOpen] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { addToCart } = useCart()
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   useEffect(() => {
     setMounted(true)
@@ -62,6 +63,7 @@ export default function ProductPage() {
   }
 
   const discount = product.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0
+  const isLiked = isFavorite(product.id)
 
   const relatedProducts = products
     .filter((p) => p.id !== product.id && p.subcategory === product.subcategory)
@@ -253,7 +255,7 @@ export default function ProductPage() {
                     variant="outline"
                     size="icon"
                     className="h-12 w-12 bg-transparent"
-                    onClick={() => setIsLiked(!isLiked)}
+                    onClick={() => toggleFavorite(product)}
                   >
                     <Heart className={`h-5 w-5 ${isLiked ? "fill-accent text-accent" : ""}`} />
                   </Button>

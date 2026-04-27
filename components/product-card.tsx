@@ -6,14 +6,15 @@ import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { Product } from "@/lib/products"
-import { useState } from "react"
+import { useFavorites } from "@/lib/favorites-context"
 
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const isLiked = isFavorite(product.id)
 
   const discount = product.oldPrice ? Math.round((1 - product.price / product.oldPrice) * 100) : 0
 
@@ -41,7 +42,7 @@ export function ProductCard({ product }: ProductCardProps) {
             className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/80 hover:bg-background"
             onClick={(e) => {
               e.preventDefault()
-              setIsLiked(!isLiked)
+              toggleFavorite(product)
             }}
           >
             <Heart className={`h-4 w-4 ${isLiked ? "fill-accent text-accent" : ""}`} />

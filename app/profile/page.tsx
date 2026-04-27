@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { useCart } from "@/lib/cart-context"
 import { type TryOnResult, useTryOn } from "@/lib/tryon-context"
 import { useAuth } from "@/lib/auth-context"
+import { useFavorites } from "@/lib/favorites-context"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   User,
@@ -24,69 +25,10 @@ import {
   Bell,
   LogOut,
   Package,
-  Clock,
   ChevronRight,
   Trash2,
   Eye,
 } from "lucide-react"
-
-// Mock orders data
-const mockOrders = [
-  {
-    id: "ORD-2025-001",
-    date: "15 января 2025",
-    status: "delivered",
-    statusText: "Доставлен",
-    total: 24990,
-    items: [
-      {
-        name: "Пальто прямого кроя",
-        brand: "ZARINA",
-        size: "M",
-        image: "/beige-wool-coat-women-elegant.jpg",
-      },
-    ],
-  },
-  {
-    id: "ORD-2025-002",
-    date: "20 января 2025",
-    status: "shipping",
-    statusText: "В доставке",
-    total: 15980,
-    items: [
-      {
-        name: "Платье миди с поясом",
-        brand: "LOVE REPUBLIC",
-        size: "S",
-        image: "/emerald-green-midi-dress-elegant.jpg",
-      },
-      {
-        name: "Блуза с бантом",
-        brand: "SELA",
-        size: "S",
-        image: "/white-silk-blouse-with-bow.jpg",
-      },
-    ],
-  },
-]
-
-// Mock favorites
-const mockFavorites = [
-  {
-    id: 1,
-    name: "Пальто прямого кроя",
-    brand: "ZARINA",
-    price: 12990,
-    image: "/beige-wool-coat-women-elegant.jpg",
-  },
-  {
-    id: 6,
-    name: "Куртка кожаная",
-    brand: "MANGO",
-    price: 15990,
-    image: "/black-leather-jacket-women-biker.jpg",
-  },
-]
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile")
@@ -100,6 +42,7 @@ export default function ProfilePage() {
   const { items: cartItems } = useCart()
   const { results: tryOnResults, isLoading: isTryOnsLoading, removeResult } = useTryOn()
   const { user, isLoading: isAuthLoading, login, register, logout } = useAuth()
+  const { favorites, isLoading: isFavoritesLoading, removeFavorite } = useFavorites()
 
   const handleAuthSubmit = async () => {
     setAuthError(null)
@@ -123,9 +66,9 @@ export default function ProfilePage() {
 
   const menuItems = [
     { id: "profile", label: "Профиль", icon: User },
-    { id: "orders", label: "Мои заказы", icon: Package, badge: mockOrders.length },
+    { id: "orders", label: "Мои заказы", icon: Package },
     { id: "cart", label: "Корзина", icon: ShoppingBag, badge: cartItems.length },
-    { id: "favorites", label: "Избранное", icon: Heart, badge: mockFavorites.length },
+    { id: "favorites", label: "Избранное", icon: Heart, badge: favorites.length },
     { id: "tryons", label: "AI-примерки", icon: Sparkles, badge: tryOnResults.length },
     { id: "addresses", label: "Адреса", icon: MapPin },
     { id: "payments", label: "Способы оплаты", icon: CreditCard },
@@ -299,49 +242,79 @@ export default function ProfilePage() {
               {activeTab === "orders" && (
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Мои заказы</h2>
-                  {mockOrders.map((order) => (
-                    <Card key={order.id}>
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="font-medium">{order.id}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {order.date}
-                            </p>
-                          </div>
-                          <Badge variant={order.status === "delivered" ? "default" : "secondary"}>
-                            {order.statusText}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-4">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex gap-3">
-                              <div className="w-16 h-20 relative rounded-md overflow-hidden bg-muted">
-                                <Image
-                                  src={item.image || "/placeholder.svg"}
-                                  alt={item.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              <div className="text-sm">
-                                <p className="text-muted-foreground">{item.brand}</p>
-                                <p className="font-medium">{item.name}</p>
-                                <p className="text-muted-foreground">Размер: {item.size}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-                          <span className="font-semibold">{order.total.toLocaleString()} ₽</span>
-                          <Button variant="outline" size="sm" className="bg-transparent">
-                            Подробнее
-                          </Button>
-                        </div>
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-4">У вас пока нет заказов</p>
+                      <Button asChild>
+                        <Link href="/catalog">Перейти в каталог</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Favorites */}
+              {activeTab === "favorites" && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Избранное</h2>
+                  {isFavoritesLoading ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        Загружаем избранное...
                       </CardContent>
                     </Card>
-                  ))}
+                  ) : favorites.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <Heart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground mb-4">В избранном пока нет товаров</p>
+                        <Button asChild>
+                          <Link href="/catalog">Перейти в каталог</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {favorites.map((item) => (
+                        <Card key={item.id}>
+                          <CardContent className="p-4 flex gap-4">
+                            <Link
+                              href={`/product/${item.id}`}
+                              className="w-24 h-32 relative rounded-md overflow-hidden bg-muted"
+                            >
+                              <Image
+                                src={item.images[0] || "/placeholder.svg"}
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </Link>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-muted-foreground">{item.brand}</p>
+                              <Link href={`/product/${item.id}`} className="font-medium hover:underline">
+                                {item.name}
+                              </Link>
+                              <p className="font-semibold mt-2">{item.price.toLocaleString()} ₽</p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <Button size="sm" asChild>
+                                  <Link href={`/product/${item.id}`}>Открыть</Link>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="bg-transparent"
+                                  onClick={() => removeFavorite(item.id)}
+                                >
+                                  Убрать
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -389,42 +362,6 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Favorites */}
-              {activeTab === "favorites" && (
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Избранное</h2>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {mockFavorites.map((item) => (
-                      <Card key={item.id}>
-                        <CardContent className="p-4 flex gap-4">
-                          <Link
-                            href={`/product/${item.id}`}
-                            className="w-24 h-32 relative rounded-md overflow-hidden bg-muted"
-                          >
-                            <Image
-                              src={item.image || "/placeholder.svg"}
-                              alt={item.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </Link>
-                          <div className="flex-1">
-                            <p className="text-sm text-muted-foreground">{item.brand}</p>
-                            <Link href={`/product/${item.id}`} className="font-medium hover:underline">
-                              {item.name}
-                            </Link>
-                            <p className="font-semibold mt-2">{item.price.toLocaleString()} ₽</p>
-                            <Button size="sm" className="mt-2">
-                              В корзину
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
                 </div>
               )}
 

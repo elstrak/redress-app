@@ -5,6 +5,7 @@ import "./globals.css"
 import { CartProvider } from "@/lib/cart-context"
 import { TryOnProvider } from "@/lib/tryon-context"
 import { AuthProvider } from "@/lib/auth-context"
+import { FavoritesProvider } from "@/lib/favorites-context"
 
 export const metadata: Metadata = {
   title: "STYLEHUB - Интернет-магазин одежды",
@@ -21,9 +22,11 @@ export default function RootLayout({
     <html lang="ru">
       <body className="font-sans antialiased">
         <AuthProvider>
-          <CartProvider>
-            <TryOnProvider>{children}</TryOnProvider>
-          </CartProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <TryOnProvider>{children}</TryOnProvider>
+            </CartProvider>
+          </FavoritesProvider>
         </AuthProvider>
         <Analytics />
       </body>
