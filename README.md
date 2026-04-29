@@ -32,7 +32,7 @@ The try-on flow is prepared for FASHN Virtual Try-On v1.6.
 ```bash
 FASHN_API_KEY=your_api_key_here
 MONGODB_URI=your_mongodb_atlas_uri
-MONGODB_DB=stylehub
+MONGODB_DB=looklab
 SESSION_SECRET=long_random_secret
 ```
 

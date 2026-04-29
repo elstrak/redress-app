@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,8 +69,16 @@ export function Header() {
           </Sheet>
 
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <span className="text-xl md:text-2xl font-bold tracking-tight">STYLEHUB</span>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo.jpg"
+              alt="LOOKLAB"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-md object-cover"
+              priority
+            />
+            <span className="text-xl md:text-2xl font-bold tracking-tight">LOOKLAB</span>
           </Link>
 
           {/* Desktop nav */}

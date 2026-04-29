@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
@@ -9,7 +10,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <span className="text-xl font-bold tracking-tight">STYLEHUB</span>
+            <div className="flex items-center gap-2">
+              <Image src="/logo.jpg" alt="LOOKLAB" width={32} height={32} className="h-8 w-8 rounded-md object-cover" />
+              <span className="text-xl font-bold tracking-tight">LOOKLAB</span>
+            </div>
             <p className="text-sm text-muted-foreground">Ваш персональный стилист с технологией AI-примерки</p>
           </div>
 
@@ -62,7 +66,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>&copy; 2025 STYLEHUB. Все права защищены.</p>
+          <p>&copy; 2026 LOOKLAB. Все права защищены.</p>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-foreground transition-colors">
               Политика конфиденциальности

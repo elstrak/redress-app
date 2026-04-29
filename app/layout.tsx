@@ -8,7 +8,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { FavoritesProvider } from "@/lib/favorites-context"
 
 export const metadata: Metadata = {
-  title: "STYLEHUB - Интернет-магазин одежды",
+  title: "LOOKLAB - Интернет-магазин одежды",
   description: "Модная одежда с AI-примеркой онлайн",
     generator: 'v0.app'
 }

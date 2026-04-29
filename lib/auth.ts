@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { ObjectId, type Collection } from "mongodb"
 import { getDb } from "@/lib/mongodb"
 
-export const SESSION_COOKIE = "stylehub_session"
+export const SESSION_COOKIE = "looklab_session"
 
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30
 
